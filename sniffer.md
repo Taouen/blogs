@@ -24,9 +24,11 @@ mana: {
 
 ![manafilter1.png](./assets/manafilter1.png 'First version of mana filter')
 
+<br>
+
 This covers most situations you’d come across. However, what if your opponent has a land that can produce both blue and black mana? This was the challenge I was faced with: add a way for the user to create a new mana source button with colors that they select, and have the app display cards appropriately.
 
-We can break this problem into three parts:
+This problem can be broken into three parts:
 
 1. Select colors and create a new mana source button.
 2. Allow custom multicolor mana sources to be used for any of their defined colors.
@@ -50,9 +52,13 @@ const [colors, setColors] = useState({
 });
 ```
 
+<br>
+
 Using Object.entries(), I mapped over the colors object and created buttons for each one.
 
 ![multicolormenu.png](./assets/multicolormenu.png 'Multicolor selection menu')
+
+<br>
 
 A few things happen when one of the buttons is clicked. First, the selected value for that color is changed to true so that I can conditionally display a checkmark over the button indicating that it's selected. Second, the color object is added to a `colorsForNewManaSource` state array, and then the array is sorted by each object's `sortOrder` value. This is important later on.
 
@@ -71,15 +77,39 @@ mana: {
 }
 ```
 
+<br>
+
 Here's the final result, with the app rendering after the change to the mana state:
 
 #### Input video here
 
 ### Allow custom multicolor mana sources to be used for any of their defined colors
 
-Now that we can create a button for a new multicolor mana source, we need to make it work.
+Now that the user can create a button for a new multicolor mana source, I needed to make it do something. To start, I needed the new mana source to be able to allow cards of any of its colors to be displayed, so I needed to figure out how to identify what the colors are in the first place.
 
-For my first pass at this, I tried to use the name of the color (the string value we created when confirming the source) by just using the string split() method. However, this broke down immediately. For the sake of DRY, I needed to use the same method that I did for the rest of the mana sources, but this method fails when it reaches the any color mana (M), since it is represented by a single letter.
+For my first pass at this, I tried to use the name of the color (the string value we created when confirming the source) by just using the string `split()` method. In the interest of not repeating my code, I needed to use the same method that I did for the rest of the mana sources. However, this method fails when it reaches the any color mana (M), since it is represented by a single letter.
+
+I decided to refactor the mana state. Instead of the value for each property being simply a number representing the available amount of that color, I changed it to an object so that I could add an array of colors that it could produce.
+
+```js
+mana: {
+      W: { value: 0, colors: ['W'] },
+      U: { value: 0, colors: ['U'] },
+      B: { value: 0, colors: ['B'] },
+      R: { value: 0, colors: ['R'] },
+      G: { value: 0, colors: ['G'] },
+      M: { value: 0, colors: ['W', 'U', 'B', 'R', 'G'] },
+      C: { value: 0, colors: [] },
+    }
+```
+
+<br>
+
+Now when a new source is created, the colors value for that object is created by using the `split()` method. So the new source added to the mana state looks like this:
+
+```js
+WU: { value: 0, colors: ['W', 'U']},
+```
 
 ### Notes
 
@@ -99,7 +129,7 @@ For my first pass at this, I tried to use the name of the color (the string valu
 2. Allow a multicolor source to be used for any of its defined colors.
    - Tried to use just the name of the source (‘WUB’, ‘RG’, ‘GU’, etc). Too complicated.
    - Add colors array to mana state to provide a way to check the colors of a source.
-3. Allow a multicolor source to be used only as many times as are available as indicated by the user.
    - Prioritize sources that produce fewer colors (create array copy of mana state to preserve order, sorted by number of colors produced)
+3. Allow a multicolor source to be used only as many times as are available as indicated by the user.
    - Loop over required mana, and compare each to each mana source.
    - If the source produces that color of mana, and has a value > 0, use that mana, then move on (either to the next source if the requirement for the color is unfulfilled or to the next required color if it is)
