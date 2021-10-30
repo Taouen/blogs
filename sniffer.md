@@ -26,6 +26,8 @@ mana: {
 
 <br>
 
+When the user adds any amount of mana, the app goes through the selected set of cards, comparing the cards required amounts of each color of mana with the available amounts entered by the user. If the required amount of each color of mana is available and the total cost of the card is less than or equal to the total available mana, then the card is added to the list of cards to be displayed.
+
 This covers most situations you’d come across. However, what if your opponent has a land that can produce both blue and black mana? This was the challenge I was faced with: add a way for the user to create a new mana source button with colors that they select, and have the app display cards appropriately.
 
 This problem can be broken into three parts:
@@ -60,7 +62,7 @@ Using Object.entries(), I mapped over the colors object and created buttons for 
 
 <br>
 
-A few things happen when one of the buttons is clicked. First, the selected value for that color is changed to true so that I can conditionally display a checkmark over the button indicating that it's selected. Second, the color object is added to a `colorsForNewManaSource` state array, and then the array is sorted by each object's `sortOrder` value. This is important later on.
+A few things happen when one of the buttons is clicked. First, the selected value for that color is changed to true so that I can conditionally display a checkmark over the button indicating that it's selected. Second, the color object is added to a `colorsForNewManaSource` array in state, and then the array is sorted by each object's `sortOrder` value. This is important later on.
 
 Once the user has selected between 2 and 4 colors, the menu's close button switches to a confirm button with a checkmark. The menu won't allow a user to confirm with a single color or all 5 colors selected because they are already available in the standard mana filter. When the user confirms the selections, the `value` of each object in the `colorsForNewManaSource` array are joined together into a single string. Remember how the color objects were sorted by their `sortOrder` properties? This is important because it creates consistency in the naming convention, so when we pass the name to the ManaButton component, it can find the symbol svg with the same name exported from the symbols.js file. The name is then used to create a new source in the app's main mana state.
 
@@ -110,6 +112,8 @@ Now when a new source is created, the colors value for that object is created by
 ```js
 WU: { value: 0, colors: ['W', 'U']},
 ```
+
+This required a quick tweak to the function that compares casting cost to available mana. Before, it was able to just compare each source directly, since each source simply had a number value. Now I had to change it to check if the source produces the color
 
 ### Notes
 
