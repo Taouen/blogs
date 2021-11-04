@@ -107,13 +107,51 @@ mana: {
 
 <br>
 
-Now when a new source is created, the colors value for that object is created by using the `split()` method. So the new source added to the mana state looks like this:
+Now when a new source is created, the colors value for that object is created by using the `split()` method on the source's name. So the new source added to the mana state looks like this:
 
 ```js
 WU: { value: 0, colors: ['W', 'U']},
 ```
 
-This required a quick tweak to the function that compares casting cost to available mana. Before, it was able to just compare each source directly, since each source simply had a number value. Now I had to change it to check if the source produces the color
+This required a change to the function that compares casting cost to available mana. Before, I was able to loop over the mana and directly compare each source to the required color since it was just a numberical value. Now I had to check for each source if it produced the current color it was checking for, and only compare the available amount if it did produce that color.
+
+### Allow a multicolor source to be used only as many times as are available as indicated by the user
+
+I ran into an issue where multicolor sources were allowing cards that cost more mana than was available through the filter. For example, I had 1 mana from a source providing blue or red, and a card costing 1 blue _and_ 1 red was being displayed. After a lot of troubleshooting, including learning a lot about how to use the debugger in the browser, I discovered the issue. When the function checked for the availability of multiple colors, it did not indicate if a source had already been used, so it was using the full available mana for each color of a card. So using the above example, when the function checked if there was 1 blue mana, it found that there was. Then when it moved on to red, it found that there was also 1 red mana available, because there was no indication that it had already been used to provide the required blue mana.
+
+So I needed a solution. I also wanted to prioritize using sources that produced fewer colors since they are less flexible. If I had 1 blue from an only blue source and 1 blue/red mana, and the same card costing 1 blue and 1 red, I didn't want to indadvertantly use up the blue/red mana on the required blue mana and have an extra blue mana and no red mana available.
+
+I solved both issues at once. I made a temporary copy of the current mana state as an array that I could manipulate throughout the checking of an individual card without affecting the actual mana. Next, the array was by the number of colors each source could produce. In this way, the order was guaranteed to be the same every time, and I'd avoid any issues using the mana inefficiently.
+
+Time to change the compare function one more time. Now I loop over each color of required mana, and for each required color loop over the mana state.
+
+```javascript
+for (currentColor in requiredMana) {
+  mana.forEach((source) => {
+    // End the loop if the source has no mana available, or if the required color has been fulfilled.
+    if (source.value === 0 || requiredMana[currentColor] === 0) return;
+
+    if (source.colors.includes(currentColor)) {
+      /*  If there is more mana available than required for the current color,
+       subtract the required amount from the mana source. Otherwise, subtract the
+       available mana from the required amount. */
+      if (source.value >= requiredMana[currentColor]) {
+        source.value -= requiredMana[currentColor];
+        if (source.value < 0) {
+          source.value = 0;
+        }
+        color[1] = 0;
+      } else {
+        requiredMana[currentColor] -= source.value;
+        if (requiredMana[currentColor] < 0) {
+          requiredMana[currentColor] = 0;
+        }
+        requiredMana[currentColor] = 0;
+      }
+    }
+  });
+}
+```
 
 ### Notes
 
