@@ -2,7 +2,7 @@ https://m2m.pqsec.org/
 
 I’ve been working on a companion app for a trading card game called Magic: The Gathering (or MTG for short). In the game, two or more players spend resources called mana to cast spells trying to reduce their opponents’ life total from 20 to 0. The app displays possibilities for cards an opponent could play, based on an amount of mana entered by the user. To understand the problem, we’ll start with some context.
 
-There are 5 colors of mana, each represented in shorthand by a single letter: white (W), blue (U), black (B), red (R), and green (G). There is also a sixth type of mana called colorless (or C), though it doesn’t come up as commonly. Cards that can produce mana are called mana sources, and can typically produce one mana of one or more colors (depending on the source) per turn cycle (from the start of a player’s turn until the start of their next turn).
+There are 5 colors of mana, each represented in shorthand by a single letter: white (W), blue (U), black (B), red (R), and green (G). There is also a sixth type of mana called colorless (or C), though it doesn’t come up very commonly. Cards that can produce mana are called mana sources, and can typically produce one mana of one or more colors per turn cycle (from the start of a player’s turn until the start of their next turn).
 
 Most spells can only be played during the “Main Phase” of your turn, but some can be played at any time during any player’s turn. These spells are referred to as being “instant speed”, and they are the spells we are interested in for this app.
 
@@ -22,7 +22,7 @@ mana: {
 }
 ```
 
-![manafilter1.png](./assets/manafilter1.png 'First version of mana filter')
+manafilter1.png
 
 <br>
 
@@ -42,7 +42,7 @@ The easiest part of this problem was the UI. I knew I wanted to have some kind o
 
 I looked at a few different open source libraries for creating circular menus, and I landed on [react-planet](https://github.com/innFactory/react-planet) as it was more flexible and visually pretty much what I wanted.
 
-I created an state object within my multicolorMenu component called colors, and listed the 5 main colors that I'd need to make buttons for.
+I created a state object within my multicolorMenu component called colors, and listed the 5 main colors that I'd need to make buttons for.
 
 ```javascript
 const [colors, setColors] = useState({
@@ -58,7 +58,7 @@ const [colors, setColors] = useState({
 
 Using Object.entries(), I mapped over the colors object and created buttons for each one.
 
-![multicolormenu.png](./assets/multicolormenu.png 'Multicolor selection menu')
+multicolormenu.png
 
 <br>
 
@@ -83,7 +83,7 @@ mana: {
 
 Here's the final result, with the app rendering after the change to the mana state:
 
-#### Input video here
+Input video here
 
 ### Allow custom multicolor mana sources to be used for any of their defined colors
 
@@ -113,13 +113,13 @@ Now when a new source is created, the colors value for that object is created by
 WU: { value: 0, colors: ['W', 'U']},
 ```
 
-This required a change to the function that compares casting cost to available mana. Before, I was able to loop over the mana and directly compare each source to the required color since it was just a numberical value. Now I had to check for each source if it produced the current color it was checking for, and only compare the available amount if it did produce that color.
+This required a change to the function that compares casting cost to available mana. Before, I was able to loop over the mana and directly compare each source to the required color since it was just a numerical value. Now I had to check for each source if it produced the current color it was checking for, and only compare the available amount if it did produce that color.
 
 ### Allow a multicolor source to be used only as many times as are available as indicated by the user
 
 I ran into an issue where multicolor sources were allowing cards that cost more mana than was available through the filter. For example, I had 1 mana from a source providing blue or red, and a card costing 1 blue _and_ 1 red was being displayed. After a lot of troubleshooting, including learning a lot about how to use the debugger in the browser, I discovered the issue. When the function checked for the availability of multiple colors, it did not indicate if a source had already been used, so it was using the full available mana for each color of a card. So using the above example, when the function checked if there was 1 blue mana, it found that there was. Then when it moved on to red, it found that there was also 1 red mana available, because there was no indication that it had already been used to provide the required blue mana.
 
-So I needed a solution. I also wanted to prioritize using sources that produced fewer colors since they are less flexible. If I had 1 blue from an only blue source and 1 blue/red mana, and the same card costing 1 blue and 1 red, I didn't want to indadvertantly use up the blue/red mana on the required blue mana and have an extra blue mana and no red mana available.
+So I needed a solution. I also wanted to prioritize using sources that produced fewer colors since they are less flexible. If I had 1 blue from an only blue source and 1 blue/red mana, and the same card costing 1 blue and 1 red, I didn't want to inadvertantly use up the blue/red mana on the required blue mana and have an extra blue mana and no red mana available.
 
 I solved both issues at once. I made a temporary copy of the current mana state as an array that I could manipulate throughout the checking of an individual card without affecting the actual mana. Next, the array was by the number of colors each source could produce. In this way, the order was guaranteed to be the same every time, and I'd avoid any issues using the mana inefficiently.
 
@@ -152,6 +152,10 @@ for (currentColor in requiredMana) {
   });
 }
 ```
+
+<br>
+
+Now I have a menu that allows the user to create their own multicolor mana buttons. The buttons can be used the same as the standard ones, and properly display any cards that match the colors and amount of mana provided by those sources. It's probably not the most efficient solution, though I'll probably never consider this project done. I'll probably come back to it and improve it along my journey, but for where I'm at in my career right now, I'm happy with the fact that it works.
 
 ### Notes
 
